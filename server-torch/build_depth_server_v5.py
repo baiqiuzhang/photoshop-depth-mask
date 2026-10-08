@@ -27,8 +27,18 @@ SPEC = SOURCE_ROOT / "depth_server_v5.spec"
 CANDIDATE_DIST_ROOT = PROJECT_ROOT / "dist_v7_candidate"
 CANDIDATE_BUILD_ROOT = PROJECT_ROOT / "build_v7_candidate"
 DIST_DIR = CANDIDATE_DIST_ROOT / "depth_server"
-PLUGIN_ROOT = PROJECT_ROOT / "com.zk21.depthpro"
-MODELS_SRC = PROJECT_ROOT.parent / "papers" / "深度实验" / "模型"
+# 打包成品目录（历史工作区位置）：可用 DEPTH_PLUGIN_DST 覆盖。
+PLUGIN_ROOT = Path(os.environ.get("DEPTH_PLUGIN_DST",
+                                  str(PROJECT_ROOT / "com.zk21.depthpro")))
+# 前端素材来源：优先 DEPTH_FRONTEND_SRC；历史工作区在 com.zk21.depthpro/ 下，
+# 本仓库（源码-only）把同一批前端文件放在 uxp/ 下。
+FRONTEND_SRC = Path(os.environ.get(
+    "DEPTH_FRONTEND_SRC",
+    str(PLUGIN_ROOT if (PLUGIN_ROOT / "index.html").is_file() else PROJECT_ROOT / "uxp")))
+# 权重源目录：优先环境变量 DEPTH_MODELS_SRC（普通克隆没有历史工作区，必须显式指定），
+# 未设置时回落到历史工作区位置（与本脚本同级的 papers/深度实验/模型）。
+MODELS_SRC = Path(os.environ.get(
+    "DEPTH_MODELS_SRC", str(PROJECT_ROOT.parent / "papers" / "深度实验" / "模型")))
 
 # 每个模型的插件内文件夹 -> (来源, 复制方式)
 # 方式: whole(整个目录) | subdirs(仅列出的子目录)
@@ -125,12 +135,19 @@ def stage_models():
 
 
 def stage_frontend_and_docs():
+    readme_src = first_existing(PROJECT_ROOT / "README.txt",
+                                PROJECT_ROOT / "docs" / "README.zh-CN.txt")
+    licenses_dir = first_existing(SOURCE_ROOT / "THIRD_PARTY_LICENSES",
+                                  PROJECT_ROOT / "THIRD_PARTY_LICENSES")
+    if not FRONTEND_SRC.is_dir():
+        raise FileNotFoundError(
+            f"前端素材目录缺失: {FRONTEND_SRC}（用 DEPTH_FRONTEND_SRC 指定）")
     for name in FRONTEND_FILES:
-        copy_path(PLUGIN_ROOT / name, DIST_DIR / name)
-    copy_path(PROJECT_ROOT / "README.txt", DIST_DIR / "README.txt")
-    notice_src = SOURCE_ROOT / "THIRD_PARTY_LICENSES" / "THIRD_PARTY_NOTICE.txt"
-    copy_path(notice_src, DIST_DIR / "THIRD_PARTY_NOTICE.txt")
-    copy_path(SOURCE_ROOT / "THIRD_PARTY_LICENSES", DIST_DIR / "THIRD_PARTY_LICENSES")
+        copy_path(FRONTEND_SRC / name, DIST_DIR / name)
+    copy_path(readme_src, DIST_DIR / "README.txt")
+    copy_path(licenses_dir / "THIRD_PARTY_NOTICE.txt",
+              DIST_DIR / "THIRD_PARTY_NOTICE.txt")
+    copy_path(licenses_dir, DIST_DIR / "THIRD_PARTY_LICENSES")
 
 
 def verify_dist():

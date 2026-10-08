@@ -18,7 +18,8 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const PLUGIN = 'D:/depth_pro_photoshop_jsx/0.2.1/com.zk21.depthpro';
+// 被测插件目录：默认取本测试文件的上一级（uxp/），可用 DEPTHMASK_PLUGIN 覆盖。
+const PLUGIN = process.env.DEPTHMASK_PLUGIN || path.join(__dirname, '..');
 const PngCodec = require(path.join(PLUGIN, 'png_codec.js'));
 
 let pass = 0, fail = 0;

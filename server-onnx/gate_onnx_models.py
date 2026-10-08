@@ -1,20 +1,28 @@
 # -*- coding: utf-8 -*-
-"""ONNX 分支数值门：5 个模型宿主流水线 vs scripts/_onnx_ref/*.npz（CPU EP）。
+"""ONNX 分支数值门：5 个模型宿主流水线 vs 参考夹具 *_onnx_ref/*.npz（CPU EP）。
 
-运行环境：depth_builder（onnxruntime-directml + onnx + numpy + PIL）。
-用法：python gate_onnx_models.py
+运行环境：onnxruntime-directml（或 onnxruntime）+ onnx + numpy + PIL。
+用法：
+  set DEPTH_MODELS_SRC=<ONNX 权重目录>
+  set DEPTH_ONNX_REF_DIR=<参考夹具目录>
+  python gate_onnx_models.py [--models depthpro bridge distillanydepth iris ppd]
 判据：逐阶段/最终深度 cosine >= 0.99；结果写入 gate_results.json。
-本脚本只读参考数据与模型权重，不修改任何文件。
+本脚本只读参考数据与模型权重，不修改任何文件（gate_*.json 为中间产物）。
 """
 import argparse
 import json
 import os
 import sys
 
-REF_DIR = r'D:\depth_pro_photoshop_jsx\papers\深度实验\scripts\_onnx_ref'
-MODELS_SRC = r'D:\depth_pro_photoshop_jsx\papers\深度实验\模型'
 SRC_WIN = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SRC_WIN)
+
+# 参考夹具目录（*.npz）与 ONNX 权重源目录。两者都不随仓库发布，必须自己指定：
+# 命令行 --ref-dir / --models-src 优先，其次环境变量，最后回落到仓库内的同层目录。
+REF_DIR = os.environ.get(
+    'DEPTH_ONNX_REF_DIR', os.path.normpath(os.path.join(SRC_WIN, os.pardir, 'onnx_ref')))
+MODELS_SRC = os.environ.get(
+    'DEPTH_MODELS_SRC', os.path.normpath(os.path.join(SRC_WIN, os.pardir, 'models')))
 
 import numpy as np  # noqa: E402
 import onnx_common  # noqa: E402
@@ -154,7 +162,23 @@ def main():
                         help='只跑指定模型（默认全部）')
     parser.add_argument('--worker', action='store_true',
                         help='内部参数：在子进程中执行单模型门（父进程每模型起一个进程，隔离内存）')
+    parser.add_argument('--ref-dir', default=None,
+                        help='参考夹具目录（默认取 DEPTH_ONNX_REF_DIR，其次 ../onnx_ref）')
+    parser.add_argument('--models-src', default=None,
+                        help='ONNX 权重源目录（默认取 DEPTH_MODELS_SRC，其次 ../models）')
     args = parser.parse_args()
+
+    global REF_DIR, MODELS_SRC
+    if args.ref_dir:
+        REF_DIR = args.ref_dir
+    if args.models_src:
+        MODELS_SRC = args.models_src
+    for label, path in (('参考夹具目录', REF_DIR), ('ONNX 权重源目录', MODELS_SRC)):
+        if not os.path.isdir(path):
+            raise SystemExit(
+                f'{label}不存在: {path}\n'
+                '本仓库不附带参考夹具与 ONNX 权重，请用 --ref-dir / --models-src '
+                '或环境变量 DEPTH_ONNX_REF_DIR / DEPTH_MODELS_SRC 指定。')
 
     runners = {'depthpro': gate_depthpro, 'bridge': gate_bridge,
                'distillanydepth': gate_dad, 'iris': gate_iris, 'ppd': gate_ppd}
@@ -177,7 +201,9 @@ def main():
     models = list(runners) if not args.models else args.models
     out = {}
     for name in models:
-        env = dict(os.environ, GATE_WORKER_MODEL=name)
+        # 把解析后的两个目录透传给 worker，否则子进程会回落到默认值。
+        env = dict(os.environ, GATE_WORKER_MODEL=name,
+                   DEPTH_ONNX_REF_DIR=REF_DIR, DEPTH_MODELS_SRC=MODELS_SRC)
         print(f'== gating {name} (subprocess) ...', flush=True)
         code = sp.call([sys.executable, os.path.abspath(__file__), '--worker'],
                        env=env, cwd=SRC_WIN)

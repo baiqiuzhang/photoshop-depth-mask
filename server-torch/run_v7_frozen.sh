@@ -1,8 +1,11 @@
 #!/bin/bash
 # frozen 冒烟测试：候选目录 exe /ping version=7 + 5 模型检视 + /process 样图（16/8bit）
 set -u
-PY="D:/depth_v7_builder/python.exe"
-DIST="D:/depth_pro_photoshop_jsx/0.2.1/dist_v7_candidate/depth_server"
+# 路径可用环境变量覆盖；默认值按仓库布局推导（本脚本位于 server-torch/，即源码目录）。
+SRC_DIR="${DEPTH_SRC_DIR:-$(cd "$(dirname "$0")" && pwd)}"
+REPO_ROOT="$(cd "$SRC_DIR/.." && pwd)"
+PY="${DEPTH_PY:-python}"
+DIST="${DEPTH_EXE_DIR:-$REPO_ROOT/dist_v7_candidate/depth_server}"
 OUT="run_v7_frozen_out.txt"
 : > "$OUT"
 taskkill //F //IM depth_server.exe >/dev/null 2>&1
@@ -18,7 +21,7 @@ curl -s http://127.0.0.1:8766/ping | "$PY" -c "import sys,json; d=json.load(sys.
 
 run_case() {
     echo "===== $* =====" | tee -a "$OUT"
-    (cd "D:/depth_pro_photoshop_jsx/0.2.1/源码" && "$PY" test_client.py process "$@" 2>&1 | grep -viE "loading weights|it/s" | tail -5 | tee -a "$OUT")
+    (cd "$SRC_DIR" && "$PY" test_client.py process "$@" 2>&1 | grep -viE "loading weights|it/s" | tail -5 | tee -a "$OUT")
 }
 
 run_case --model depthpro --upscale gf --radius 2 --algo S1 --bits 16 --target 1024 683

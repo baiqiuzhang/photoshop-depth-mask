@@ -5,11 +5,23 @@
  */
 'use strict';
 const path = require('path');
-const PLUGIN = 'D:/depth_pro_photoshop_jsx/0.2.1/com.zk21.depthpro';
-const SPECTRUM_PLUGIN = 'D:/depth_pro_photoshop_jsx/0.2.1/com.zk21.spectrum';
+const fs = require('fs');
+// 被测插件目录：默认取本测试文件的上一级（uxp/），可用 DEPTHMASK_PLUGIN 覆盖。
+const PLUGIN = process.env.DEPTHMASK_PLUGIN || path.join(__dirname, '..');
+// spectrum_core.js 属于另一个插件（com.zk21.spectrum），不随本仓库发布。
+// 找不到就跳过第 3~6 节，其余断言照常执行；可用 SPECTRUM_PLUGIN 指定其所在目录。
+const SPECTRUM_PLUGIN = process.env.SPECTRUM_PLUGIN ||
+    path.join(PLUGIN, '..', 'com.zk21.spectrum');
 const PngCodec = require(path.join(PLUGIN, 'png_codec.js'));
 const MixCore = require(path.join(PLUGIN, 'mix_core.js'));
-const SpectrumCore = require(path.join(SPECTRUM_PLUGIN, 'spectrum_core.js'));
+let SpectrumCore = null;
+const spectrumCorePath = path.join(SPECTRUM_PLUGIN, 'spectrum_core.js');
+if (fs.existsSync(spectrumCorePath)) {
+    SpectrumCore = require(spectrumCorePath);
+} else {
+    console.log('!! 未找到 ' + spectrumCorePath);
+    console.log('!! 跳过 spectrum_core 相关小节（第 3~6 节）；设 SPECTRUM_PLUGIN 可启用');
+}
 
 let pass = 0, fail = 0;
 function check(name, cond, detail) {
@@ -177,6 +189,9 @@ console.log('== mix_core ==');
     try { MixCore.mix(a, new Float32Array(5), 'average', 0.5); } catch (e) { threw = true; }
     check('尺寸不一致抛错', threw);
 }
+
+// 第 3~6 节依赖 spectrum_core.js（未随本仓库发布），缺失时整体跳过。
+if (SpectrumCore) {
 
 // ============ 3. spectrum_core ============
 console.log('== spectrum_core ==');
@@ -438,6 +453,8 @@ console.log('== 4096² DFT 可行性 ==');
         console.log('  （4096² dft 耗时 ' + (Date.now() - t0) + 'ms）');
     }
 }
+
+}  // if (SpectrumCore)
 
 console.log('\n结果: ' + pass + ' 通过, ' + fail + ' 失败');
 process.exit(fail ? 1 : 0);

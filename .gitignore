@@ -24,8 +24,12 @@
 /_internal/
 /build/
 /dist/
-*.spec.bak*
 /build_manifest*.json
+# build drivers' staging output (server-torch / server-onnx)
+/dist_v7_candidate/
+/build_v7_candidate/
+/dist_win_candidate/
+/build_win_candidate/
 
 # ---- python ----
 __pycache__/

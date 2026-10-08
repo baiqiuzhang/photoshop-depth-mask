@@ -5,8 +5,12 @@
 #   2) 重建 exe（spec 已补 requests 元数据）
 #   3) 冻结包 Iris 实测（验证 requests 元数据修复）
 set -u
-cd "D:/depth_pro_photoshop_jsx/0.2.1/源码" || exit 1
-PY="D:/depth_v7_builder/python.exe"
+# 路径可用环境变量覆盖；默认值按仓库布局推导（本脚本位于 server-torch/，即源码目录）。
+SRC_DIR="${DEPTH_SRC_DIR:-$(cd "$(dirname "$0")" && pwd)}"
+REPO_ROOT="$(cd "$SRC_DIR/.." && pwd)"
+PY="${DEPTH_PY:-python}"
+DIST="${DEPTH_EXE_DIR:-$REPO_ROOT/dist_v7_candidate/depth_server}"
+cd "$SRC_DIR" || exit 1
 LOG="server_fix6_test.log"
 OUT="run_fix6_out.txt"
 STATS="fix6_stats"
@@ -46,11 +50,11 @@ if [ "$BUILD_RC" != "0" ]; then echo "FAIL: build" | tee -a "$OUT"; tail -30 bui
 tail -3 build_fix6.log | tee -a "$OUT"
 
 echo "== phase 3: frozen iris test ==" | tee -a "$OUT"
-EXE="D:/depth_pro_photoshop_jsx/0.2.1/dist_v7_candidate/depth_server/depth_server.exe"
-cd "D:/depth_pro_photoshop_jsx/0.2.1/dist_v7_candidate/depth_server" || exit 1
-"./depth_server.exe" > "D:/depth_pro_photoshop_jsx/0.2.1/源码/server_fix6_frozen.log" 2>&1 &
+EXE="$DIST/depth_server.exe"
+cd "$DIST" || exit 1
+"./depth_server.exe" > "$SRC_DIR/server_fix6_frozen.log" 2>&1 &
 FROZEN_PID=$!
-cd "D:/depth_pro_photoshop_jsx/0.2.1/源码" || exit 1
+cd "$SRC_DIR" || exit 1
 READY=0
 for i in $(seq 1 90); do
     if curl -s http://127.0.0.1:8766/ping >/dev/null 2>&1; then READY=1; break; fi

@@ -22,7 +22,9 @@ import onnx
 from onnx import helper
 
 ROOT = Path(__file__).resolve().parent
-MODELS_SRC = ROOT.parent.parent / 'papers' / '深度实验' / '模型'
+# 权重源目录：优先环境变量 DEPTH_MODELS_SRC，未设置时回落到历史工作区位置。
+MODELS_SRC = Path(os.environ.get(
+    'DEPTH_MODELS_SRC', str(ROOT.parent.parent / 'papers' / '深度实验' / '模型')))
 BACKUP_DIR = ROOT / 'onnx_originals'
 
 TARGETS = [

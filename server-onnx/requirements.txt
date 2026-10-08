@@ -1,0 +1,31 @@
+# Depth Mask Generator — Windows / ONNX variant (plugin id com.zk21.depthpro.windows)
+# Runtime dependencies of the service in this folder (protocol 7 / 0.2.1).
+#
+# Reconstructed from the actual imports in server-onnx/*.py plus the build
+# environment recorded in server-onnx/README.txt:140-143 (venv on Python 3.12.4,
+# onnxruntime-directml 1.24.4, flask, opencv-python, pillow, numpy, PyInstaller 6.22).
+#
+# This variant never reads torch weights and never imports torch / transformers /
+# diffusers, and it needs no copy of third_party/* (the model adapters only use
+# onnxruntime plus onnx_common.py in this folder).
+
+# --- service ---
+flask
+numpy
+Pillow
+opencv-python
+scipy
+scikit-learn
+psutil
+
+# --- inference runtime ---
+# Windows: one package provides both the DirectML and the CPU execution provider.
+# Use plain `onnxruntime` on other platforms.
+onnxruntime-directml==1.24.4
+
+# --- only needed to re-run the graph-editing helpers ---
+# patch_allowzero.py / patch_expand_tile.py
+onnx
+
+# --- packaging (PyInstaller onedir build) ---
+pyinstaller==6.22

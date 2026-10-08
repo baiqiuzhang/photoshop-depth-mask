@@ -137,17 +137,18 @@ torch 分支的五轮改动已全量同步到本分支（代码级，exe 已重�
 
 8. 构建（开发者）
 ----------------------------------------------------------------
-打包环境：D:\depth_pro_photoshop_jsx\0.2.1\onnx_win_env（venv，Python 3.12.4，
-onnxruntime-directml 1.24.4、flask、opencv-python、pillow、numpy、pyinstaller
-6.22；2026-09-19 创建——旧环境 D:\event_camera\depth_builder 已不存在，
-anaconda base 仅有纯 CPU onnxruntime 无 DML）。
-命令：
-  onnx_win_env\Scripts\python.exe build_windows_onnx.py --dry-run
-  onnx_win_env\Scripts\python.exe build_windows_onnx.py
+打包环境（作者本机历史记录，路径仅作参照）：D:\depth_pro_photoshop_jsx\0.2.1\onnx_win_env
+（venv，Python 3.12.4，onnxruntime-directml 1.24.4、flask、opencv-python、
+pillow、numpy、pyinstaller 6.22；2026-09-19 创建——旧环境
+D:\event_camera\depth_builder 已不存在，anaconda base 仅有纯 CPU onnxruntime 无 DML）。
+命令（在自己创建的虚拟环境里执行；依赖清单见同目录 requirements.txt）：
+  <venv>\Scripts\python.exe build_windows_onnx.py --dry-run
+  <venv>\Scripts\python.exe build_windows_onnx.py
   （--python 默认取当前解释器；--skip-copy-to-plugin 不回写插件目录）
 输出：com.zk21.depthpro.windows\（onedir 即插件目录）。
-数值门（对照 papers/深度实验/scripts/_onnx_ref 参考数据）：
-  D:\event_camera\depth_builder\python.exe gate_onnx_models.py
+数值门（对照参考夹具 _onnx_ref 下的 *.npz）：本仓库不附带参考夹具与 ONNX 权重，
+需先设 DEPTH_MODELS_SRC（ONNX 权重目录）与 DEPTH_ONNX_REF_DIR（参考夹具目录），再运行
+  <venv>\Scripts\python.exe gate_onnx_models.py [--models depthpro bridge ...]
 
 9. 版权与许可
 ----------------------------------------------------------------

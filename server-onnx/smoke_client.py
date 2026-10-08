@@ -3,7 +3,7 @@
 
 用法：
   python smoke_client.py --server http://127.0.0.1:8766 \
-      --model depthpro --algo none --bits 8 [--image path/to/img.png] [--jpg path/img.jpg]
+      --model depthpro --algo none --bits 8 [--image path/to/img.png]
 输出：写入 smoke_out/<model>_<algo>_<bits>.png + 打印诊断与统计。
 统计纪律：shape/dtype/位深/min/max/mean/std/唯一值数/截断比例。
 """
@@ -17,8 +17,12 @@ import urllib.request
 
 import numpy as np
 
-OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'smoke_out')
-SAMPLE_JPG = r'D:\depth_pro_photoshop_jsx\0.2.1\测试样图\_DSC5383-编辑-拷贝.jpg'
+_HERE = os.path.dirname(os.path.abspath(__file__))
+OUT_DIR = os.path.join(_HERE, 'smoke_out')
+# 默认样图：用 --image 传自己的 PNG，或把环境变量 DEPTH_SAMPLE_JPG 指向一张本地图片。
+# 仓库不附带测试样图，默认路径不存在时会在下面给出明确提示。
+SAMPLE_JPG = os.environ.get('DEPTH_SAMPLE_JPG',
+                            os.path.normpath(os.path.join(_HERE, os.pardir, 'sample.jpg')))
 
 
 def load_8bit_png(path):
@@ -119,7 +123,10 @@ def main():
         src_desc = os.path.basename(args.image)
     else:
         if not os.path.isfile(SAMPLE_JPG):
-            raise SystemExit(f'样图不存在: {SAMPLE_JPG}')
+            raise SystemExit(
+                f'样图不存在: {SAMPLE_JPG}\n'
+                '请用 --image <png> 指定输入图，或用 --bits 16 走合成图，'
+                '或设 DEPTH_SAMPLE_JPG 指向本地图片。')
         from PIL import Image
         with Image.open(SAMPLE_JPG) as img:
             img = img.convert('RGB')

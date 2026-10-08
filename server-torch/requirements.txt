@@ -1,0 +1,43 @@
+# Depth Mask Generator — Torch variant (plugin id com.zk21.depthpro)
+# Runtime dependencies of the service in this folder (protocol 7 / 0.2.1).
+#
+# Reconstructed from the actual imports in server-torch/*.py plus the versions
+# recorded for the reference build environment in docs/README.zh-CN.txt:448-450
+# (torch 2.9.1+cu128, transformers 5.13.1, diffusers 0.28.0, peft / timm /
+# utils3d / omegaconf / PyInstaller 6.20; Python 3.12).
+#
+# NOTE: the three upstream inference packages (bridge, pipeline, ppd) are not on
+# PyPI. Copy third_party/BRIDGE, third_party/Iris and third_party/PPD into the
+# weight folders as described in docs/BUILD.md §2 — the adapters put
+# <weight folder>/源码 on sys.path before importing them.
+
+# --- service ---
+flask
+numpy
+Pillow
+opencv-python
+scipy
+scikit-learn
+psutil
+
+# --- inference runtime ---
+# CUDA build for RTX 50 / sm_120 and older architectures:
+#   pip install --index-url https://download.pytorch.org/whl/cu128 torch==2.9.1
+torch==2.9.1
+transformers==5.13.1
+diffusers==0.28.0
+accelerate
+peft
+omegaconf
+timm
+
+# --- required by the vendored third_party/PPD sources ---
+utils3d @ git+https://github.com/EasternJournalist/utils3d.git@c5daf6f6c244d251f252102d09e9b7bcef791a38
+
+# --- only pulled in by upstream example code, not by the service ---
+# matplotlib
+# torchvision
+# open3d
+
+# --- packaging (PyInstaller onedir build) ---
+pyinstaller==6.20

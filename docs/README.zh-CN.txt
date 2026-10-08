@@ -444,14 +444,14 @@ com.zk21.depthpro 内部结构：
   common.js、vendor/pako.min.js。两个插件均为纯前端 JS，服务端零改动
   （协议保持 7，exe 无需重建）。
 
-  构建环境：D:\depth_pro_photoshop_jsx\0.2.1\depth_v8_builder
+  构建环境（作者本机历史记录，路径仅作参照）：D:\depth_pro_photoshop_jsx\0.2.1\depth_v8_builder
   （torch 2.9.1+cu128——支持 RTX 50 / sm_120、transformers 5.13.1 +
   diffusers 0.28.0 + peft/timm/utils3d/cv2/omegaconf/PyInstaller 6.20）。
   diffusers 与 transformers 5.x 的兼容性通过 4 处 vendor 补丁解决
   （详见 THIRD_PARTY_NOTICE.txt"本地修改"）。
 
   构建命令（在 源码\ 下，仅重建 exe+_internal）：
-    ..\depth_v8_builder\python.exe -m PyInstaller --noconfirm --clean
+    <venv>\python.exe -m PyInstaller --noconfirm --clean
       --distpath ..\dist_v7_candidate --workpath ..\build_v7_candidate
       depth_server_v5.spec
   完整 staging（含 5 套权重复制，需 papers/深度实验/模型 就位）：

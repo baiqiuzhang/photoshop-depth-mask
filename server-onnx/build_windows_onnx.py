@@ -24,20 +24,32 @@ CANDIDATE_DIST_ROOT = PROJECT_ROOT / "dist_win_candidate"
 CANDIDATE_BUILD_ROOT = PROJECT_ROOT / "build_win_candidate"
 DIST_DIR = CANDIDATE_DIST_ROOT / "depth_server"
 PLUGIN_DST = PROJECT_ROOT / "com.zk21.depthpro.windows"
-PLUGIN_SRC = PROJECT_ROOT / "com.zk21.depthpro"
+# 前端素材来源：优先 DEPTH_FRONTEND_SRC；历史工作区在 com.zk21.depthpro/ 下，
+# 本仓库（源码-only）把同一批前端文件放在 uxp/ 下。
+PLUGIN_SRC = Path(os.environ.get(
+    "DEPTH_FRONTEND_SRC",
+    str(PROJECT_ROOT / "com.zk21.depthpro")
+    if (PROJECT_ROOT / "com.zk21.depthpro" / "index.html").is_file()
+    else str(PROJECT_ROOT / "uxp")))
 
 
 def _resolve_models_src():
-    """ONNX 权重来源：优先 papers/深度实验/模型（历史位置），缺失时回退到
-    工作区插件目录 com.zk21.depthpro.windows 现存的 *-onnx 权重（2026-09-19：
-    论文目录已删除，插件目录即唯一现存副本）。"""
-    candidates = (PROJECT_ROOT.parent / "papers" / "深度实验" / "模型",
-                  PROJECT_ROOT / "com.zk21.depthpro.windows")
+    """ONNX 权重来源，按顺序尝试：
+    1) 环境变量 DEPTH_MODELS_SRC（普通克隆应使用这一条）；
+    2) 历史工作区位置 papers/深度实验/模型；
+    3) 工作区插件目录 com.zk21.depthpro.windows 现存的 *-onnx 权重
+       （2026-09-19：论文目录已删除，插件目录即唯一现存副本）。"""
+    env_src = os.environ.get("DEPTH_MODELS_SRC")
+    candidates = ([Path(env_src)] if env_src else []) + [
+        PROJECT_ROOT.parent / "papers" / "深度实验" / "模型",
+        PROJECT_ROOT / "com.zk21.depthpro.windows",
+    ]
     for candidate in candidates:
         if (candidate / "BRIDGE-onnx").is_dir():
             return candidate
     raise FileNotFoundError(
-        "ONNX 权重来源缺失（已尝试: " + "; ".join(str(c) for c in candidates) + "）")
+        "ONNX 权重来源缺失（已尝试: " + "; ".join(str(c) for c in candidates)
+        + "）；请用环境变量 DEPTH_MODELS_SRC 指向含 *-onnx 目录的路径。")
 
 
 MODELS_SRC = _resolve_models_src()
@@ -121,11 +133,24 @@ def stage_frontend_and_docs(dry_run=False):
             print(f"  [dry] 复制前端 {name}")
             continue
         copy_path(src, DIST_DIR / name)
-    copy_path(PLUGIN_SRC / "vendor", DIST_DIR / "vendor")
     # 分支 manifest（id = com.zk21.depthpro.windows）
-    copy_path(ROOT / "manifest_windows.json", DIST_DIR / "manifest.json")
-    copy_path(ROOT / "README.txt", DIST_DIR / "README.txt")
-    copy_path(ROOT / "THIRD_PARTY_NOTICE.txt", DIST_DIR / "THIRD_PARTY_NOTICE.txt")
+    manifest_src = ROOT / "manifest_windows.json"
+    if not manifest_src.is_file():
+        manifest_src = PLUGIN_SRC / "manifest.onnx.json"
+    readme_src = ROOT / "README.txt"
+    if not readme_src.is_file():
+        readme_src = PROJECT_ROOT / "docs" / "README.zh-CN.txt"
+    notice_src = ROOT / "THIRD_PARTY_NOTICE.txt"
+    if not notice_src.is_file():
+        notice_src = PROJECT_ROOT / "THIRD_PARTY_NOTICE.txt"
+    if dry_run:
+        # dry-run 不得写盘：这里只报告，不复制（vendor/manifest/README/NOTICE）。
+        print("  [dry] 复制前端 vendor/ + manifest.json + README.txt + THIRD_PARTY_NOTICE.txt")
+        return
+    copy_path(PLUGIN_SRC / "vendor", DIST_DIR / "vendor")
+    copy_path(manifest_src, DIST_DIR / "manifest.json")
+    copy_path(readme_src, DIST_DIR / "README.txt")
+    copy_path(notice_src, DIST_DIR / "THIRD_PARTY_NOTICE.txt")
 
 
 def verify_dist():

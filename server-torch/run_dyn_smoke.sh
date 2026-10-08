@@ -1,8 +1,12 @@
 #!/bin/bash
 # 0.2.1 动态半径机制 冒烟链：源码级 e2e（同图 none/bilinear/gf，记录 k/n/r_eff/r_lp）→ 重建 exe
 set -u
-cd "D:/depth_pro_photoshop_jsx/0.2.1/源码" || exit 1
-PY="D:/depth_v7_builder/python.exe"
+# 路径可用环境变量覆盖；默认值按仓库布局推导（本脚本位于 server-torch/，即源码目录）。
+SRC_DIR="${DEPTH_SRC_DIR:-$(cd "$(dirname "$0")" && pwd)}"
+REPO_ROOT="$(cd "$SRC_DIR/.." && pwd)"
+PY="${DEPTH_PY:-python}"
+DIST="${DEPTH_EXE_DIR:-$REPO_ROOT/dist_v7_candidate/depth_server}"
+cd "$SRC_DIR" || exit 1
 LOG="server_dyn_test.log"
 OUT="run_dyn_out.txt"
 : > "$OUT"

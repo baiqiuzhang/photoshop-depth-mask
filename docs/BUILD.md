@@ -58,7 +58,36 @@ Where to get them:
 Full attribution and the list of local vendor patches are in
 [`../THIRD_PARTY_NOTICE.txt`](../THIRD_PARTY_NOTICE.txt).
 
+### Where the vendored upstream sources go (Torch variant)
+
+The Torch adapters put `<weight folder>/源码` on `sys.path` and then import the upstream
+inference packages (`from bridge.dpt import Bridge`, `from pipeline import IrisPipeline`,
+`import ppd`). So the trees under `third_party/` are not optional — copy them into place:
+
+| this repository | copy to | provides |
+|---|---|---|
+| `third_party/BRIDGE/*` | `<DEPTH_MODEL_ROOT>/BRIDGE/源码/` | the `bridge/` package (`bridge/dpt.py`) |
+| `third_party/Iris/*` | `<DEPTH_MODEL_ROOT>/Iris/源码/` | `pipeline.py` (+ `utils/`) |
+| `third_party/PPD/*` | `<DEPTH_MODEL_ROOT>/PPD/源码/` | the `ppd/` package |
+
+`DepthPro/` and `DistillAnyDepth/` need **no** local source copy: those adapters load straight
+through `transformers`. The Windows/ONNX variant needs no source copy at all — its adapters use
+ONNX Runtime plus `onnx_common.py` from `server-onnx/`.
+
 ## 3. Building the service
+
+### Python dependencies
+
+`server-torch/requirements.txt` and `server-onnx/requirements.txt` list what the two services
+actually import, together with the versions recorded for the reference build environments
+(`docs/README.zh-CN.txt:448-450` and `server-onnx/README.txt:140-143`). Python 3.12 was used for
+both reference builds.
+
+⚠️ Do **not** install `third_party/*/requirements.txt` verbatim. Those are the upstream *research*
+environments and they pin older, mutually incompatible stacks — Iris pins `torch==2.3.1+cu121`,
+`transformers==4.40.1` and `numpy==1.26.4`, whereas the shipped service runs `torch 2.9.1+cu128`
+and `transformers 5.13.1` (the `diffusers`/`transformers` 5.x combination works only because of
+the local vendor patches). Take the upstream **source trees** from §2, not their dependency pins.
 
 ### Torch variant
 
@@ -106,8 +135,13 @@ background and restarts it when a stale service with the wrong protocol version 
 * Protocol: `curl http://127.0.0.1:8766/ping` must report `"version": "7"`.
 * End to end: `server-onnx/smoke_client.py` posts a fixed image and writes PNGs into
   `smoke_out/`; `server-onnx/test_client.py` is the wider client test.
-* Front-end logic without Photoshop: `node uxp/tests/test_frontend_core.js` and
-  `node uxp/tests/test_bitdepth.js` (28 + 87 assertions).
+* Front-end logic without Photoshop, run from the repository root:
+  `node uxp/tests/test_bitdepth.js` (28 assertions) and
+  `node uxp/tests/test_frontend_core.js` (25 assertions).
+  Both resolve the plugin under test as `uxp/..` and honour `DEPTHMASK_PLUGIN=<dir>`.
+  `test_frontend_core.js` also covers `spectrum_core.js`, which belongs to a separate plugin
+  and is **not** shipped here: on a fresh clone it prints a skip notice for sections 3–6 and
+  still exits 0. Set `SPECTRUM_PLUGIN=<dir>` to enable those sections.
 * Depth output must be checked as **`uint16` / 16-bit PNG for real** — do not trust the file name
   or the UI label. Record shape, dtype, bit depth, min/max/mean/std, unique value count,
   clipping ratio and seam metrics when comparing variants, and always keep an

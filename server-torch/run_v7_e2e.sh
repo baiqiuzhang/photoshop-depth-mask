@@ -2,8 +2,12 @@
 # 协议 7 端到端测试：起服务 -> /ping -> /process 矩阵 -> 杀服务（自包含单命令）
 # 输出写入 run_v7_e2e_out.txt，进度实时可见
 set -u
-cd "D:/depth_pro_photoshop_jsx/0.2.1/源码" || exit 1
-PY="D:/depth_v7_builder/python.exe"
+# 路径可用环境变量覆盖；默认值按仓库布局推导（本脚本位于 server-torch/，即源码目录）。
+SRC_DIR="${DEPTH_SRC_DIR:-$(cd "$(dirname "$0")" && pwd)}"
+REPO_ROOT="$(cd "$SRC_DIR/.." && pwd)"
+PY="${DEPTH_PY:-python}"
+DIST="${DEPTH_EXE_DIR:-$REPO_ROOT/dist_v7_candidate/depth_server}"
+cd "$SRC_DIR" || exit 1
 LOG="server_v7_test.log"
 OUT="run_v7_e2e_out.txt"
 : > "$OUT"
