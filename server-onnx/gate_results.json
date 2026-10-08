@@ -1,0 +1,12 @@
+{
+  "depthpro:_DSC5383": {
+    "depth_hw_cos": 0.99726893,
+    "mean": 281.98,
+    "max": 10000.0
+  },
+  "depthpro:_DSC0975": {
+    "depth_hw_cos": 0.99999734,
+    "mean": 82.435,
+    "max": 223.764
+  }
+}

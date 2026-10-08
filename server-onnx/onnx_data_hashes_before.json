@@ -1,0 +1,9 @@
+{
+ "BRIDGE-onnx\\bridge_fp32.onnx_data": "3dc3900ef69acb9269dd2ecc0af9dab81d92047530b0a71e0cdbd664f5ca82da",
+ "DepthPro-onnx\\depthpro_fp32.onnx.data": "dfc8d70cd10eb257b5cfc635dd82eda00c0c90b398aafaaa89e08834d94a85ac",
+ "DistillAnyDepth-onnx\\distillanydepth_fp32.onnx_data": "33f98fb32b369ab518dda7c34c8000eb4bc84020da685c7233fec43434809371",
+ "Iris-onnx\\iris_text_encoder.onnx.data": "267f83041454ecd7c52094f0d0a0f4563568d6b48dde8b0930937ba46179abf2",
+ "Iris-onnx\\iris_unet.onnx.data": "b9be4d6a03ffb489c77f0a57432fd3f43561c53442547927c2bbfe47a5f0e65a",
+ "Iris-onnx\\iris_vae_decoder.onnx.data": "20ac8744b8aacbb1666ded6803b73ba7d8f9534b7630d9beeb3c9290dc043bf8",
+ "Iris-onnx\\iris_vae_encoder.onnx.data": "a6fcb9b5b17527b7ce34361d6b7df47edfca0cdacf96d52dca0e249643b2ad95"
+}

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Depth Mask</title>
+    <style>
+        /* ========== 全局重置 & 深色主题 ========== */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-size: 12px;
+            color: #d4d4d4;
+            background: #1e1e1e;
+            padding: 4px 8px 4px 8px;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            user-select: none;
+        }
+        #depthMaskPanelBody { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+
+        /* ===== 首行：模型 + 输出模式（扁平，无方框） ===== */
+        .top-row {
+            display: flex; align-items: center; gap: 6px;
+            padding: 0; flex-shrink: 0;
+        }
+        .top-row .label { font-weight: 500; color: #b0b0b0; font-size: 11.5px; letter-spacing: 0.2px; white-space: nowrap; line-height: 20px; }
+        .mode-group { display: flex; align-items: center; gap: 2px; }
+        .mode-group label {
+            display: inline-flex; align-items: center; gap: 3px; padding: 2px 6px 2px 3px;
+            border-radius: 4px; font-size: 13px; cursor: pointer; color: #b0b0b0;
+            background: transparent; border: 1px solid transparent;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .mode-group label:hover { background: #3a3a3a; color: #e8e8e8; }
+        .mode-group input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+        .mode-group .custom-radio {
+            display: inline-block; width: 13px; height: 13px; border-radius: 50%;
+            border: 2px solid #5a5a5a; background: transparent; flex-shrink: 0;
+            transition: border-color 0.2s, background 0.2s; position: relative;
+        }
+        .mode-group input[type="radio"]:checked+.custom-radio { border-color: #0078d4; background: #0078d4; }
+        .mode-group input[type="radio"]:checked+.custom-radio::after {
+            content: ""; display: block; width: 4px; height: 4px; border-radius: 50%;
+            background: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        }
+        .mode-group label:has(input:checked) { background: #1a3a5c; border-color: #0078d4; }
+        #modelSelect {
+            flex: 1; padding: 0 4px; border: 1px solid #4a4a4a; border-radius: 4px;
+            background: #2d2d2d; font-size: 13px; color: #e0e0e0; outline: none; cursor: pointer;
+            min-width: 0; height: 20px;
+        }
+        #modelSelect:focus { border-color: #0078d4; box-shadow: 0 0 0 3px rgba(0,120,212,0.25); }
+        #modelSelect option { background: #2d2d2d; color: #e0e0e0; }
+
+        /* ===== 通用下拉行（扁平，无方框） ===== */
+        .algo-group {
+            display: flex; align-items: center; gap: 5px; margin-top: 1px;
+            padding: 0; flex-shrink: 0;
+        }
+        .algo-group .label { font-weight: 500; color: #b0b0b0; font-size: 11.5px; letter-spacing: 0.2px; white-space: nowrap; line-height: 20px; }
+        #algoSelect, #upscaleSelect, #mixA, #mixB, #mixOp {
+            flex: 1; padding: 0 4px; border: 1px solid #3a3a3a; border-radius: 3px;
+            background: #222222; font-size: 12px; color: #e0e0e0; outline: none; cursor: pointer;
+            min-width: 0; height: 20px;
+        }
+        #algoSelect:focus, #upscaleSelect:focus, #mixA:focus, #mixB:focus, #mixOp:focus {
+            border-color: #0078d4; box-shadow: 0 0 0 2px rgba(0,120,212,0.2);
+        }
+        #algoSelect option, #upscaleSelect option, #mixA option, #mixB option, #mixOp option {
+            background: #222222; color: #e0e0e0;
+        }
+
+        /* ===== 参数容器（扁平） ===== */
+        #paramsContainer {
+            margin-top: 1px; padding: 0; flex-shrink: 0; min-height: 0; overflow: visible;
+        }
+        #paramsContainer:empty { display: none; }
+        .param-row { display: flex; align-items: center; gap: 5px; padding: 0; min-height: 19px; flex-wrap: nowrap; }
+        .param-row .p-label { font-size: 11.5px; color: #b0b0b0; flex: 0 0 auto; white-space: nowrap; font-weight: 450; letter-spacing: 0.2px; line-height: 20px; }
+        .param-row .control-wrapper { flex: 0 1 auto; display: flex; align-items: center; gap: 6px; min-width: 0; flex-wrap: nowrap; }
+        .param-row .control-wrapper.grow { flex: 1 1 auto; }
+        .param-row input[type="range"] {
+            flex: 1; min-width: 30px; height: 4px; -webkit-appearance: none; appearance: none;
+            background: transparent; border: none; outline: none; box-shadow: none; padding: 0; margin: 0;
+        }
+        .param-row input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: #4a4a4a; border: none; border-radius: 4px; }
+        .param-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 14px; height: 14px; border-radius: 50%;
+            background: #0078d4; cursor: pointer; border: none; margin-top: -5px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .param-row .range-value { font-size: 13px; color: #6db8ff; min-width: 30px; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; flex-shrink: 0; line-height: 1.3; white-space: nowrap; }
+        .param-row input[type="number"] {
+            width: 48px; padding: 1px 2px; border: 1px solid #4a4a4a; border-radius: 4px; font-size: 13px;
+            background: #3a3a3a; color: #e0e0e0; outline: none; height: 20px; text-align: center; flex-shrink: 0;
+        }
+        .param-row input[type="number"]:focus { border-color: #0078d4; box-shadow: 0 0 0 3px rgba(0,120,212,0.2); }
+        .param-row select {
+            flex: 1; padding: 1px 4px; border: 1px solid #4a4a4a; border-radius: 4px; font-size: 13px;
+            background: #3a3a3a; color: #e0e0e0; outline: none; cursor: pointer; min-width: 60px; height: 20px;
+        }
+        .param-row select:focus { border-color: #0078d4; box-shadow: 0 0 0 3px rgba(0,120,212,0.2); }
+
+        /* ===== 后处理+超分 合并行（简约分隔线模块） ===== */
+        .sect { border-top: 1px solid #2a2a2a; }
+
+        /* ===== 生成按钮 ===== */
+        .btn-wrap { margin-top: 1px; flex-shrink: 0; display: flex; justify-content: center; }
+        #generateBtn {
+            width: 100%; padding: 3px 0; background: #0078d4; color: #fff; border: none; border-radius: 4px;
+            font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.2s;
+            box-shadow: none; letter-spacing: 0.5px; line-height: 1.2;
+        }
+        #generateBtn:hover:not(:disabled) { background: #1a86e0; }
+        #generateBtn:active:not(:disabled) { transform: scale(0.98); }
+        #generateBtn:disabled { background: #4a5a6a; box-shadow: none; cursor: not-allowed; opacity: 0.6; }
+
+        /* ===== 派生通道 + AlphaMixer（左右两列，扁平） ===== */
+        #derivedArea {
+            flex-shrink: 0; margin-top: 1px; padding: 2px 0 0 0;
+            border-top: 1px solid #2a2a2a;
+            display: flex; flex-direction: row; gap: 8px;
+        }
+        .derived-left { display: flex; flex-direction: column; gap: 1px; justify-content: center; flex: 0 0 auto; }
+        .gen-btn {
+            width: 60px; min-width: 60px; height: 19px; padding: 0; border: none; border-radius: 3px;
+            background: #333c48; color: #e0e0e0; font-size: 11.5px; font-weight: 500; cursor: pointer;
+            transition: background 0.15s; line-height: 1; flex-shrink: 0; overflow: hidden; white-space: nowrap;
+        }
+        .gen-btn:hover { background: #46566a; }
+        .gen-btn:active { transform: scale(0.96); }
+        .mixer-panel { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+        .mixer-row { display: flex; align-items: center; gap: 4px; min-height: 19px; }
+        .mixer-row .mixer-label { font-size: 11px; color: #8a8a8a; flex: 0 0 auto; line-height: 19px; }
+        .mixer-row select { flex: 1; min-width: 0; height: 19px; }
+        .mixer-row input[type="text"] {
+            flex: 1; min-width: 0; height: 19px; padding: 0 5px; border: 1px solid #3a3a3a;
+            border-radius: 3px; font-size: 11.5px; background: #222222; color: #e0e0e0; outline: none;
+        }
+        .mixer-row input[type="range"] {
+            flex: 1; min-width: 20px; height: 4px; -webkit-appearance: none; appearance: none;
+            background: transparent; border: none; outline: none; padding: 0; margin: 0;
+        }
+        .mixer-row input[type="range"]::-webkit-slider-runnable-track { height: 4px; background: #4a4a4a; border-radius: 4px; }
+        .mixer-row input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 11px; height: 11px; border-radius: 50%;
+            background: #0078d4; cursor: pointer; border: none; margin-top: -3.5px;
+        }
+        .mixer-row .range-value { font-size: 11px; color: #6db8ff; min-width: 28px; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0; }
+        #mixBtn {
+            width: 56px; height: 19px; flex-shrink: 0; border: none; border-radius: 3px; background: #2d6a9f;
+            color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; letter-spacing: 1px; padding: 0;
+        }
+        #mixBtn:hover:not(:disabled) { background: #1a86e0; }
+        #mixBtn:disabled { background: #4a5a6a; cursor: not-allowed; opacity: 0.6; }
+
+        /* ===== 状态（扁平，分隔线上方） ===== */
+        #status {
+            margin-top: 1px; padding-top: 1px; border-top: 1px solid #2a2a2a;
+            font-size: 11.5px; color: #b0b0b0; padding-bottom: 0; background: transparent;
+            flex-shrink: 0; min-height: 16px; display: flex; align-items: center; gap: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        #status::before { content: "●"; font-size: 10px; color: #5a6a7a; }
+        #status.ready::before { color: #4caf50; }
+        #status.busy::before { color: #ffa726; animation: pulse 1s infinite; }
+        #status.error::before { color: #ef5350; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+        /* ===== 日志（扁平） ===== */
+        #log {
+            margin-top: 1px; flex: 1 1 14px; min-height: 0; max-height: 36px; overflow-y: auto; font-size: 10.5px;
+            font-family: "SF Mono", "Menlo", "Consolas", monospace; background: transparent; color: #b8b8b8;
+            padding: 1px 0; border: none; line-height: 1.4; white-space: pre-wrap; word-break: break-all;
+        }
+        #log div { padding: 0; margin: 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        #log div:last-child { border-bottom: none; }
+
+        /* ========== 响应式（默认已是紧凑尺寸，仅极矮面板再收紧间距） ========== */
+        @media (max-height: 300px) {
+            body { padding: 3px 6px 3px 6px; }
+            .algo-group, #paramsContainer, #derivedArea, .btn-wrap { margin-top: 0; }
+            #log { min-height: 10px; max-height: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ================= 主面板 ================= -->
+    <div id="depthMaskPanelBody">
+
+        <!-- 首行：模型 + 输出模式 -->
+        <div class="top-row">
+            <span class="label">模型</span>
+            <select id="modelSelect">
+                <option value="depthpro">Depth Pro</option>
+            </select>
+            <span class="label" style="margin-left:2px;">输出</span>
+            <div class="mode-group">
+                <label>
+                    <input type="radio" name="mode" value="depth" checked>
+                    <span class="custom-radio"></span>
+                    <span>Depth</span>
+                </label>
+                <label>
+                    <input type="radio" name="mode" value="fog">
+                    <span class="custom-radio"></span>
+                    <span>Fog</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- 后处理 + 超分（合并一行，发丝分隔线分模块） -->
+        <div class="algo-group sect">
+            <span class="label">后处理</span>
+            <select id="algoSelect">
+                <option value="S1" selected>S1 全局CDF</option>
+                <option value="none">无</option>
+                <option value="S5">S5 GMM</option>
+                <option value="N1_KMeans">N1 KMeans</option>
+                <option value="N1A">N1A 峰值</option>
+                <option value="N2">N2 理想</option>
+            </select>
+            <span class="label">超分</span>
+            <select id="upscaleSelect">
+                <option value="bilinear" selected>Bilinear</option>
+                <option value="wgif">WGIF 加权引导</option>
+                <option value="jbu-nc">JBU-NC 非凸联合双边</option>
+                <option value="none">不超分</option>
+            </select>
+        </div>
+
+        <!-- 参数容器（直方图参数） -->
+        <div id="paramsContainer"></div>
+
+        <!-- WGIF 半径 r 滑块（.param-row 结构，与后处理调参滑块样式统一） -->
+        <div id="wgifRadiusRow" class="param-row" style="display:none;">
+            <span class="p-label">半径 r</span>
+            <div class="control-wrapper">
+                <input type="range" id="wgifRadius" min="1" max="32" step="1" value="2">
+                <span class="range-value" id="wgifRadiusValue">2</span>
+            </div>
+        </div>
+
+        <!-- JBU-NC 参数已固定为服务端默认（σr=0.05），调参滑块取消：
+             实测 σr 0.02–0.10 全程差异低于 8-bit 可见阈值（见 ckpt-20260919-jbunc） -->
+
+        <!-- 生成按钮 -->
+        <div class="btn-wrap">
+            <button id="generateBtn">生成</button>
+        </div>
+
+        <!-- 派生通道（左）+ AlphaMixer（右） -->
+        <div id="derivedArea">
+            <div class="derived-left">
+                <button class="gen-btn" data-type="depth" data-level="all">depth</button>
+                <button class="gen-btn" data-type="antidepth" data-level="all">antidep</button>
+                <button class="gen-btn" data-type="middepth" data-level="all">middep</button>
+            </div>
+            <div class="mixer-panel">
+                <div class="mixer-row">
+                    <select id="mixA">
+                        <option value="Lum Lock" selected>Lum Lock</option>
+                        <option value="depth">depth</option>
+                        <option value="L">L</option>
+                        <option value="__custom__">自定义</option>
+                    </select>
+                    <select id="mixB">
+                        <option value="Lum Lock">Lum Lock</option>
+                        <option value="depth" selected>depth</option>
+                        <option value="L">L</option>
+                        <option value="__custom__">自定义</option>
+                    </select>
+                </div>
+                <div class="mixer-row" id="mixCustomRow" style="display:none;">
+                    <input type="text" id="mixACustom" placeholder="通道A" style="display:none;">
+                    <input type="text" id="mixBCustom" placeholder="通道B" style="display:none;">
+                </div>
+                <div class="mixer-row">
+                    <select id="mixOp">
+                        <option value="average" selected>加权平均 +</option>
+                        <option value="multiply">乘法 ×</option>
+                        <option value="rms">平方平均 RMS</option>
+                        <option value="screen">滤色 Screen</option>
+                        <option value="difference">差值 Difference</option>
+                        <option value="max">最大值 Max</option>
+                        <option value="min">最小值 Min</option>
+                        <option value="overlay">叠加 Overlay</option>
+                    </select>
+                    <button id="mixBtn">mix</button>
+                </div>
+                <div class="mixer-row">
+                    <span class="mixer-label">比例</span>
+                    <input type="range" id="mixRatio" min="0" max="100" step="1" value="50">
+                    <span class="range-value" id="mixRatioValue">50%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 状态 -->
+        <div id="status">就绪</div>
+
+        <!-- 日志 -->
+        <div id="log"></div>
+    </div>
+
+    <!-- ================= 频谱分析已拆分为独立插件 com.zk21.spectrum ================= -->
+
+    <script src="vendor/pako.min.js"></script>
+    <script src="png_codec.js"></script>
+    <script src="mix_core.js"></script>
+    <script src="common.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>

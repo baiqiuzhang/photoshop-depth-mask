@@ -1,0 +1,65 @@
+# ---- model weights (never committed; see docs/BUILD.md) ----
+*.pth
+*.pt
+*.safetensors
+*.onnx
+*.onnx.data
+*.ckpt
+# weight folders of both variants, by their conventional names.
+# Leading slash keeps these anchored to the repo root so the vendored
+# upstream trees under third_party/ are not caught (e.g. third_party/PPD).
+/BRIDGE/
+/BRIDGE-onnx/
+/DepthPro/
+/DepthPro-onnx/
+/DistillAnyDepth/
+/DistillAnyDepth-onnx/
+/Iris/
+/Iris-onnx/
+/PPD/
+/PPD-onnx/
+
+# ---- built service and frozen runtime ----
+/depth_server.exe
+/_internal/
+/build/
+/dist/
+*.spec.bak*
+/build_manifest*.json
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- runtime output and logs ----
+*.log
+smoke_out/
+bench_out/
+*.npz
+*.zip
+
+# ---- editor / OS ----
+.vscode/
+.idea/
+*.swp
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# ---- local development snapshots ----
+*.bak
+*.bak-*
+*.orig
+*.rej
+
+# ---- secrets ----
+.gh-token
+*.credentials
+.env

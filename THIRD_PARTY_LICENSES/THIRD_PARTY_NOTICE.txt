@@ -1,0 +1,66 @@
+Third-Party Notices — Depth Mask Generator 0.2.1（协议 7 模块化多模型）
+========================================================================
+
+本插件分发 5 个单目深度估计模型权重与源码（Apache-2.0 / MIT，见各 LICENSE 文件）。
+
+一、模型（权重与推理源码）
+--------------------------
+
+1. BRIDGE MDE（上海 AI Lab / 复旦，arXiv 2509.25077）
+   权重：BRIDGE/权重/bridge.pth；源码：BRIDGE/源码（bridge/ 包，Apache-2.0）。
+   许可证：THIRD_PARTY_LICENSES/BRIDGE-LICENSE.txt（Apache-2.0）。
+   模型必须 fp32 推理（fp16 在 vitg 上溢出为 NaN）。
+
+2. Depth Pro（Apple）
+   权重：DepthPro/（transformers Hub 布局：config.json / model.safetensors /
+   preprocessor_config.json）。无本地源码副本，由 transformers 加载。
+   许可：按 Hugging Face 仓库（apple/DepthPro-hf）声明的条款分发。
+
+3. DistillAnyDepth（Westlake AGI Lab / SJTU，arXiv 2502.19204）
+   权重：DistillAnyDepth/权重/（transformers Hub 布局）。
+   源码 86M（含 vendored detectron2 等）不随插件分发；推理仅用 transformers
+   的 DepthAnythingForDepthEstimation 直连加载（不经 pipeline，避免 256 级灰度量化）。
+   许可证：THIRD_PARTY_LICENSES/DistillAnyDepth-LICENSE.txt（MIT）。
+
+4. Iris（CVPR 2026，diffusers DirectDiffusionPipeline 系）
+   权重：Iris/权重/（unet / text_encoder / vae / tokenizer / scheduler）；
+   源码：Iris/源码（pipeline.py 与 utils/，Apache-2.0）。
+   许可证：THIRD_PARTY_LICENSES/Iris-LICENSE.txt（Apache-2.0）。
+   本地修改（vendor 补丁，详见下文"本地修改"）。
+
+5. Pixel-Perfect Depth（NeurIPS 2025，MoGe2 语义变体）
+   权重：PPD/ppd_moge.pth + PPD/moge2.pt；源码：PPD/源码（ppd/ 包，Apache-2.0）。
+   许可证：THIRD_PARTY_LICENSES/PPD-LICENSE.txt（Apache-2.0）。
+
+二、本地修改（vendor 补丁）
+----------------------------
+
+1. Iris/源码/pipeline.py：移除顶层 `import tensorboard`（推理路径不需要，
+   避免捆绑 tensorboard 运行时）。模型加载/前向/后处理保持官方实现。
+2. Iris/源码/utils/image_utils.py：`import matplotlib` 改为 `colorize_depth_map`
+   函数内惰性导入（该函数仅用于可视化，不在推理路径；避免捆绑 matplotlib）。
+   其余保持官方实现。
+3. diffusers 0.28.0（构建环境内 vendored，随 _internal 分发）：
+   - utils/dynamic_modules_utils.py：为 huggingface_hub>=0.26 移除的
+     `cached_download` 提供兼容 shim（仅社区 pipeline 下载路径使用，插件不使用）。
+   - pipelines/pipeline_loading_utils.py：transformers 5.x 移除 Flax 后，
+     `FLAX_WEIGHTS_NAME` 回退到 diffusers 自身常量（PyTorch 模型加载不受影响）。
+   以上修改均保留原版权头与 Apache-2.0 头，并在修改处加注说明。
+
+三、模型工件哈希
+----------------
+以 build_manifest_v7.json 的 artifact_sha256 为准（构建时计算）。
+
+四、其他捆绑库
+--------------
+最终 PyInstaller onedir 交付还包含 Python 运行时与依赖库：PyTorch、
+torchvision、Transformers、Diffusers、Accelerate、PEFT、timm、utils3d、
+NumPy、SciPy、scikit-learn、Pillow、Flask、OpenCV、OmegaConf、safetensors、
+huggingface_hub、einops、addict、imageio、tqdm 及其传递依赖。各库许可证
+文本随包分发（Apache-2.0 / MIT / BSD 等），本声明不替代其各自许可条款。
+
+五、前端捆绑（pako）
+--------------------
+前端面板（AlphaMixer 与频谱分析）的 JS 端 PNG 编解码依赖 pako 2.1.0
+（vendor/pako.min.js，MIT AND Zlib）。许可证：
+THIRD_PARTY_LICENSES/pako-LICENSE.txt。

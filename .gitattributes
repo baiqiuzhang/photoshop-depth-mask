@@ -1,0 +1,23 @@
+# Normalise line endings in the repository; keep binaries untouched.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mp4 binary
+*.webp binary
+*.onnx binary
+*.onnx.data binary
+*.safetensors binary
+*.pth binary
+*.pt binary
+*.bin binary
+*.npz binary
+*.zip binary
+*.exe binary
+
+# Explicit for clarity: shell / PowerShell scripts must not be mangled.
+*.sh text eol=lf
+*.ps1 text eol=crlf

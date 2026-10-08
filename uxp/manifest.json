@@ -1,0 +1,35 @@
+{
+    "manifestVersion": 5,
+    "id": "com.zk21.depthpro",
+    "name": "Depth Mask Generator",
+    "version": "0.2.1",
+    "main": "index.html",
+    "icons": [
+        { "width": 128, "height": 128, "path": "icon.png" }
+    ],
+    "host": {
+        "app": "PS",
+        "minVersion": "23.0"
+    },
+    "entrypoints": [
+        {
+            "type": "panel",
+            "id": "depthMaskPanel",
+            "label": { "default": "Depth Mask" },
+            "minimumSize": { "width": 250, "height": 300 },
+            "preferredDockedSize": { "width": 340, "height": 400 },
+            "icons": [
+                { "width": 128, "height": 128, "path": "icon.png" }
+            ]
+        }
+    ],
+    "requiredPermissions": {
+        "network": {
+            "domains": "all",
+            "allowHttp": true
+        },
+        "localFileSystem": "fullAccess",
+        "allowCodeGenerationFromExternalSources": true,
+        "executeAsModal": true
+    }
+}

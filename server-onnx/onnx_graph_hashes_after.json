@@ -1,0 +1,14 @@
+{
+ "BRIDGE-onnx/bridge_fp32_518x784.onnx": "c2b53cf535f469b6662a3b85fb2c9cf42405b185845d67a0879bd2dd88ed5681",
+ "BRIDGE-onnx/bridge_fp32_784x518.onnx": "a93124687628115a7da4f2a047fd22b0ed9fee89a9baf7db93af0602f1d1923e",
+ "DepthPro-onnx/depthpro_fp32.onnx": "9fffc275c218816b04273f564e0f9df43ea37e27e6ac4c08fa718cd469d45614",
+ "DistillAnyDepth-onnx/distillanydepth_fp32_518x518.onnx": "ea5313e122d358f1a52706acc4ccbad926b706a1ac8cea2aabca857b69b83733",
+ "DistillAnyDepth-onnx/distillanydepth_fp32_518x784.onnx": "fdbdebf0d144d7f1367bcfcb51bcd5f79f6a5d9c9dd97599ff033958e7f40fcf",
+ "DistillAnyDepth-onnx/distillanydepth_fp32_784x518.onnx": "c45183b889899359e9a6a9d2b91d8376acaef334536fc4064dd44b8bfc9d2375",
+ "Iris-onnx/iris_text_encoder.onnx": "15db9a5537f288bb1811e492bbcfa3a4a1fd95cc8c842cc1d45f34f20a510ac4",
+ "Iris-onnx/iris_unet.onnx": "f1a7cced8b0d420728d384cb8192504c0e63ac746e96ffa95eba4d98d6cda87d",
+ "Iris-onnx/iris_vae_decoder.onnx": "c7649e75a63deed456e497852a84c73e42aa2a30edf5c6d65108fb02aa372ea1",
+ "Iris-onnx/iris_vae_encoder.onnx": "bd08fd00ad72cea78b56b3e112d0eed2830cb8afed3f7f40ba6fd44e3df9ded9",
+ "PPD-onnx/ppd_dit_step.onnx": "ad386cd1d31368a6059a45f1f6517fe58288eb77af29d3d4406d8a31275f05d8",
+ "PPD-onnx/ppd_moge_sem.onnx": "dc7c919d9edeef632168b739cf647e8f2a17299ea5d9cf601b04ba7381bcb584"
+}
